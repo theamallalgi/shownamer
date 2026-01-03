@@ -1,6 +1,22 @@
+# python related files and folders
 __pycache__/
-*.py[cod]
-*.egg-info/
-dist/
-build/
+*.pyc
+*.pyo
+*.pyd
 
+# virtual envs
+.venv/
+venv/
+
+# build artifacts
+build/
+dist/
+*.egg-info/
+
+# local config (API keys)
+config.json
+*.env
+
+# OS junk
+.DS_Store
+Thumbs.db
