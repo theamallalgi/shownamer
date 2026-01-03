@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shownamer"
+version = "2.1.0"
+authors = [
+  { name="Gemini", email="gemini@google.com" },
+]
+description = "A powerful yet lightweight command-line tool that automatically renames your TV show and movie files."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests",
+    "tomli; python_version < '3.11'",
+    "importlib-metadata; python_version < '3.8'",
+]
+
+[project.scripts]
+shownamer = "shownamer.__main__:main"

@@ -1,129 +1,126 @@
 ![Intro](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/header.png?raw=true)
 
-# Shownamer - Media Renamer
+# Shownamer - The Ultimate Media Renamer
 
-A lightweight Python CLI tool that renames TV show episodes and Movie files by fetching their actual episode titles. All TV Shows and Sitcoms and Movies are supported.
+Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze and OMDb, transforming your messy filenames into a clean, consistent, and organized format.
 
 > [!NOTE]
-> Fetches details and names from [TVmaze](https://www.tvmaze.com/) and [IMDBPy](https://github.com/MaximShidlovski23/imdbpy).
+> Fetches details and metadata from [TVmaze](https://www.tvmaze.com/) and [OMDb API](https://www.omdbapi.com/).
+> No API Keys of further tweaking will be required to rename and handle TV Show files.
+> But, OMDb Will ask the user for an API Key when trying to use shownamer with movie files.
 
-## Features
+## The Philosophy
 
-- Automatically detects and renames files like:
+The philosophy behind Shownamer is simplicity. It's designed to work "out of the box" with minimal configuration. While movie renaming requires a free API key from OMDb, the tool is designed to be as straightforward as possible. It does one thing and does it well: renaming your media files to make your collection look neat and tidy.
 
-  ```
-  Before: Malcolm in the Middle S01E10.mkv
-  After: Malcolm in the Middle S01E10 - Stock Car Races.mkv
+## Installation
 
-  Before: the.green.knight.720p.mkv
-  After: The Green Knight (2021).mkv
-  ```
-
-- Fetches episode titles, release years etc.
-- Cleans illegal filename characters automatically.
-- CLI flags for:
-  - Custom directory
-  - File extension filter
-  - Available Show Names
-  - Dry-run mode
-  - Verbose logging
-
-## Usage
-
-### Requirements
-
-- Python 3.6+
-
-Install requirements:
+Installing Shownamer is as simple as running a single command. All you need is Python 3.6 or higher.
 
 ```bash
 pip install shownamer
 ```
 
-### Run the script
+That's it! You're ready to start renaming your files.
+
+## Usage
+
+You can use Shownamer by simply typing `shownamer` in your terminal. By default, it will scan the current directory for TV show files and rename them.
+
+To see a list of all available options, you can use the `--help` flag:
 
 ```bash
 shownamer --help
 ```
 
-## Available Flags
+### Arguments
 
-| Flag                  | Description                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| `--dir`               | Directory to scan for files (default: current working directory)                      |
-| `--movie`             | Rename Movie files (skips everything else)                                            |
-| `--ext`               | File extensions to consider (default: `.mkv`, `.mp4`, `.avi`, `.mov`, `.flv`)         |
-| `--dry-run`           | Show what would be renamed, without actually renaming any files                       |
-| `--verbose`           | Show skipped files, errors, and debug output                                          |
-| `--name`              | List detected show names along with season and episode counts                         |
-| `--format FORMAT`     | Custom rename format using placeholders: `{name}`, `{season}`, `{episode}`, `{title}` |
-| `--subst REPLACEMENT` | Replace illegal characters with a specific character (excl: \ / : * ? " < > \| \0)    |
-| `--version`           | Print the tool version and exit                                                       |
+| Flag            | Description                                                                                            |
+| :-------------- | :----------------------------------------------------------------------------------------------------- |
+| `--dir`         | Specifies the directory where your media files are located. Defaults to the current working directory. |
+| `-m`, `--movie` | Look for movie files instead of TV shows.                                                              |
+| `--api-key`     | Your OMDb API key. Overrides the stored API key. (only required for renaming movie files)              |
+| `--ext`         | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.              |
+| `--dry-run`     | See what changes will be made without actually renaming any files.                                     |
+| `--verbose`     | Show more details about what is happening behind the scenes.                                           |
+| `--name`        | List all the TV show names detected in the directory. Use with `--movie` to list movie details.        |
+| `--format`      | Define your own custom filename format.                                                                |
+| `--char`        | Replace illegal characters in filenames with a specific character (`_`, `-`, `.`).                     |
+| `--version`     | Print the current version of Shownamer and exit.                                                       |
 
-### Example Usage
+### Examples
+
+**Rename TV Show Episodes**
 
 ```bash
-# Rename all valid video files in the current directory
+# Rename all supported video files in the current directory
 shownamer
 
-# Specify a custom directory
-shownamer --dir "/path/to/your/episodes"
+# Specify a directory
+shownamer --dir "/path/to/your/shows"
 
-# Preview changes without renaming files
-shownamer --dry-run
+# Only consider .mkv and .mp4 files
+shownamer --ext mkv mp4
+```
 
-# Show detected show names with season/episode stats
-shownamer --name
+**Rename Movie Files**
 
-# Rename movie files only
+The first time you run the movie command, you will be prompted for a free OMDb API key.
+This key will be stored safety until the key is replaced by a new one.
+Get your API Key here https://www.omdbapi.com/apikey.aspx
+
+```bash
+# Rename movie files in the current directory
 shownamer --movie
 
-# Limit to specific extensions
-shownamer --ext mkv mp4 avi
+# Provide an API key directly
+shownamer --movie --api-key YOUR_API_KEY
+```
 
-# Verbose mode (shows skipped files, debug info)
+**Dry Run and Verbose Mode**
+
+```bash
+# Preview the changes without actually renaming any files
+shownamer --dry-run
+
+# See detailed logs of what the tool is doing
 shownamer --verbose
-
-# Replace an illegal character
-shownamer --subst "_" # replaces illegal characters with _
-shownamer --subst "'" # replaces illegal characters with '
 ```
 
-## Filename Formats
+**List Detected Media**
 
-```sh
-{name} # show/movie name
-{season} # season number (as integer) (not available for movie tag)
-{episode} # episode number (as integer) (not available for movie tag)
-{title} # episode title (sanitized for filesystem) (not available for movie tag)
-{year} # year the show first aired/movie released
+```bash
+# List all detected TV shows in the current directory
+shownamer --name
+
+# List all detected movies
+shownamer --name --movie
 ```
 
-```sh
-shownamer --format "{name} - S{season:02}E{episode:02} - {title}" # Default Format
+### Custom Filename Formatting
 
-# Other Examples
-shownamer --format "{title} [{name} S{season:02}E{episode:02}]" # Title-first format
-shownamer --format "E{episode:02} - {title}" # Episode code only
-shownamer --format "{name} - {title}" # Name only
+You can use the `--format` argument to define your own filename structure.
+
+**Available Placeholders:**
+
+*   **For TV Shows:** `{name}`, `{season}`, `{episode}`, `{title}`, `{year}`
+*   **For Movies:** `{name}`, `{year}`, `{director}`, `{genre}`
+
+**Formatting Examples:**
+
+```bash
+# Default TV show format: {name} S{season:02}E{episode:02} - {title}
+# Output: The Office S01E01 - Pilot.mkv
+
+# Custom TV show format
+shownamer --format "{name} ({year}) - {season}x{episode} - {title}"
+
+# Default movie format: {name} ({year})
+# Output: The Green Knight (2021).mkv
+
+# Custom movie format
+shownamer --movie --format "{director} - {name} ({year}) [{genre}]"
 ```
-
-The script supports the following file name pattern:
-
-```sh
-Malcolm in the Middle S01E10.mkv
-Malcolm_in_the_Middle_S01E10.avi
-Malcolm-in-the-Middle-E10.mp4
-Malcolm.in.the.Middle.S02E03.mkv
-TheOffice_E05.avi # No Season Specified, Defaults to Season One
-The Green Knight (2021).mkv
-Zack Snyder's Justice League (2021).mkv
-```
-
-All of the following are supported:
-
-- Spaces, dots, underscores, dashes
-- Optional season (defaults to season 1 if not found)
 
 ## FAQ
 
