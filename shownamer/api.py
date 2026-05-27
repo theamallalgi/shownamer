@@ -6,7 +6,6 @@ OMDB_KEY_FILE = Path.home() / ".shownamer_omdb_key"
 OMDB_URL = "http://www.omdbapi.com/"
 
 def get_omdb_key():
-    """Check local storage, else prompt user"""
     if OMDB_KEY_FILE.exists():
         return OMDB_KEY_FILE.read_text().strip()
     print("To use the movie renaming feature, you need an OMDb API key.")
@@ -19,7 +18,6 @@ def fetch_omdb_metadata(title, year=None, api_key=None):
     params = {"t": title, "apikey": api_key, "type": "movie"}
     if year:
         params["y"] = year
-
     try:
         r = requests.get(OMDB_URL, params=params, timeout=8)
         data = r.json()
@@ -30,26 +28,23 @@ def fetch_omdb_metadata(title, year=None, api_key=None):
     return None
 
 def search_media(name, media_type="shows"):
-    """
-    Searches for a show or movie by name.
-    """
-    endpoint = "search/shows"
+    endpoint = f"search/{media_type}"
     try:
         response = requests.get(f"{BASE_URL}/{endpoint}", params={"q": name})
         response.raise_for_status()
         results = response.json()
         if results:
-            return results[0]["show"] # Return the first result
+            return results[0]["show"]
     except requests.exceptions.RequestException as e:
         print(f"[!] Error searching for {name}: {e}")
     return None
 
 def get_episode_by_number(show_id, season, episode):
-    """
-    Gets a specific episode by season and episode number.
-    """
     try:
-        response = requests.get(f"{BASE_URL}/shows/{show_id}/episodebynumber", params={"season": season, "number": episode})
+        response = requests.get(
+            f"{BASE_URL}/shows/{show_id}/episodebynumber",
+            params={"season": season, "number": episode}
+        )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
