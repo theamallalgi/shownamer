@@ -2,76 +2,118 @@ import argparse
 import sys
 from . import __version__
 
+
+class _Fmt(argparse.RawTextHelpFormatter):
+    def __init__(self, prog):
+        super().__init__(prog, max_help_position=26, width=80)
+
+    def _format_usage(self, usage, actions, groups, prefix):
+        return (
+            f"shownamer {__version__}\n"
+            "Rename TV show and movie files using metadata from OMDb and TVmaze.\n"
+            "\n"
+            "Usage:\n"
+            "  shownamer [options]\n"
+            "\n"
+        )
+
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            (metavar,) = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        parts = list(action.option_strings)
+        if action.nargs != 0:
+            args_string = self._format_args(action, action.dest.upper())
+            parts[-1] += " " + args_string
+        return ", ".join(parts)
+
+    def _format_actions_usage(self, actions, groups):
+        return ""
+
+
 def main():
-    """Main function for the shownamer CLI."""
     parser = argparse.ArgumentParser(
-        description="A powerful yet lightweight command-line tool that automatically renames your TV show and movie files."
+        prog="shownamer",
+        add_help=False,
+        formatter_class=_Fmt,
     )
 
-    parser.add_argument(
+    g = parser.add_argument_group("Options")
+
+    g.add_argument(
         "--dir",
-        type=str,
+        metavar="<path>",
         default=".",
-        help="Specifies the directory where your media files are located. Defaults to the current working directory.",
+        help="Directory to scan. Default: current directory.",
     )
-    parser.add_argument(
-        "-m", "--movie",
+    g.add_argument(
+        "-m",
+        "--movie",
         action="store_true",
-        help="Look for movie files instead of TV shows.",
+        help="Target movie files instead of TV shows.",
     )
-    parser.add_argument(
-        "--api-key",
-        type=str,
-        help="Your OMDb API key. Overrides the stored API key.",
+    g.add_argument(
+        "--api-key", metavar="<key>", help="OMDb API key. Overrides the stored key."
     )
-    parser.add_argument(
+    g.add_argument(
         "--ext",
+        metavar="<ext>",
         nargs="+",
         default=["mkv", "mp4", "avi", "mov", "flv"],
-        help="Specifies the file extensions to consider. Defaults to .mkv, .mp4, .avi, .mov, and .flv.",
+        help="File extensions to scan. Default: mkv mp4 avi mov flv.",
     )
-    parser.add_argument(
+    g.add_argument(
         "--dry-run",
         action="store_true",
-        help="See what changes will be made without actually renaming any files.",
+        help="Preview changes without renaming any files.",
     )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Show more details about what is happening behind the scenes.",
+    g.add_argument(
+        "--verbose", action="store_true", help="Show detailed output during processing."
     )
-    parser.add_argument(
+    g.add_argument(
         "--name",
         action="store_true",
-        help="List all the TV show names detected in the directory. Use with --movie to list movie details.",
+        help="List detected show or movie names in the directory.",
     )
-    parser.add_argument(
+    g.add_argument(
         "--format",
-        type=str,
-        help="""Define your own custom filename format.
-        For shows, available keys are: {name}, {season}, {episode}, {title}, {year}.
-        Default: '{name} S{season:02}E{episode:02} - {title}'
-        For movies, available keys are: {name}, {year}, {director}, {genre}.
-        Default: '{name} ({year})'
-        Example for a movie: '{director} - {name} ({year})' will result in 'Rahi Anil Barve - Tumbbad (2018).mkv'
-        """,
+        metavar="<fmt>",
+        help=(
+            "Custom filename format string.\n"
+            "  Show keys:     {name} {season} {episode} {title} {year}\n"
+            "  Movie keys:    {name} {year} {director} {genre}\n"
+            "  Show default:  {name} S{season:02}E{episode:02} - {title}\n"
+            "  Movie default: {name} ({year})"
+        ),
     )
-    parser.add_argument(
+    g.add_argument(
         "--char",
-        type=str,
+        metavar="<char>",
         default="",
-        help="Replace illegal characters in filenames with a specific character. Available characters: _ - . and empty string.",
+        help="Replace illegal filename characters. Accepts: _ - . or empty.",
     )
-    parser.add_argument(
+    g.add_argument(
+        "--title",
+        action="store_true",
+        help=(
+            "Embed media title into file metadata after renaming.\n"
+            "  Show: S02xE12 - Title  |  Movie: Name (Year)\n"
+            "  Compatible with --format and --movie."
+        ),
+    )
+    g.add_argument("-h", "--help", action="help", help="Print this help message.")
+    g.add_argument(
+        "-v",
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
-        help="Print the current version of Shownamer and exit.",
+        help="Print version and exit.",
     )
 
     args = parser.parse_args()
 
     from .core import process_directory
+
     process_directory(args)
 
 
