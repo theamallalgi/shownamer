@@ -15,7 +15,7 @@ The philosophy behind Shownamer is simplicity. It's designed to work "out of the
 
 ## Installation
 
-Installing Shownamer is as simple as running a single command. All you need is Python 3.6 or higher.
+Installing Shownamer is as simple as running a single command. All you need is Python 3.7 or higher.
 
 ```bash
 pip install shownamer
@@ -35,18 +35,20 @@ shownamer --help
 
 ### Arguments
 
-| Flag            | Description                                                                                            |
-| :-------------- | :----------------------------------------------------------------------------------------------------- |
-| `--dir`         | Specifies the directory where your media files are located. Defaults to the current working directory. |
-| `-m`, `--movie` | Look for movie files instead of TV shows.                                                              |
-| `--api-key`     | Your OMDb API key. Overrides the stored API key. (only required for renaming movie files)              |
-| `--ext`         | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.              |
-| `--dry-run`     | See what changes will be made without actually renaming any files.                                     |
-| `--verbose`     | Show more details about what is happening behind the scenes.                                           |
-| `--name`        | List all the TV show names detected in the directory. Use with `--movie` to list movie details.        |
-| `--format`      | Define your own custom filename format.                                                                |
-| `--char`        | Replace illegal characters in filenames with a specific character (`_`, `-`, `.`).                     |
-| `--version`     | Print the current version of Shownamer and exit.                                                       |
+| Flag              | Description                                                                                            |
+| :---------------- | :----------------------------------------------------------------------------------------------------- |
+| `--dir`           | Specifies the directory where your media files are located. Defaults to the current working directory. |
+| `-m`, `--movie`   | Look for movie files instead of TV shows.                                                              |
+| `--api-key`       | Your OMDb API key. Overrides the stored API key. (only required for renaming movie files)              |
+| `--ext`           | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.              |
+| `--dry-run`       | See what changes will be made without actually renaming any files.                                     |
+| `--verbose`       | Show more details about what is happening behind the scenes.                                           |
+| `--name`          | List all the TV show names detected in the directory. Use with `--movie` to list movie details.        |
+| `--format`        | Define your own custom filename format.                                                                |
+| `--char`          | Replace illegal characters in filenames with a specific character (`_`, `-`, `.`).                     |
+| `--title`         | Embed media title into file metadata after renaming. Compatible with `--format` and `--movie`.         |
+| `-h`, `--help`    | Print this help message.                                                                               |
+| `-v`, `--version` | Print the current version of Shownamer and exit.                                                       |
 
 ### Examples
 
@@ -94,7 +96,71 @@ shownamer --verbose
 shownamer --name
 
 # List all detected movies
-shownamer --name --movie
+shownamer -m --name
+```
+
+For TV shows, it prints: Show Name, Premiered, Ended, Status, Genres, Language, Country, Runtime, Main Cast, Rating, Summary, Total Seasons, Total Episodes, Local Collection Status (per season, with available/missing episode breakdown), Missing Seasons, and a Collection Summary.
+
+```
+user@device: shownamer --name
+Show Name: Raising Hope
+Premiered: 2010
+Ended: 2014
+Status: Ended
+Genres: Comedy, Family
+Language: English
+Country: United States
+Runtime: 30 min
+Main Cast: Lucas Neff, Martha Plimpton, Garret Dillahunt, Shannon Woodward, Cloris Leachman
+Rating: 7.9
+Summary: At 23 years old, Jimmy Chance is going nowhere in life. He skims pools for a
+         living, parties every night and still lives at home with his family,
+         including his parents and his cousin, Mike. Jimmy's life takes a
+         drastic turn when a chance romantic encounter with Lucy goes awry once
+         he discovers she is a wanted felon. Months later, when Jimmy pays a
+         visit to the local prison, he discovers Lucy gave birth to their baby,
+         who he is now charged with raising.
+Total Seasons: 4
+Total Episodes: 88
+	
+Local Collection Status:
+[!] Season 04: 15 / 22 episodes
+    Available: Episodes 8-22
+    Missing: Episodes 1-7
+
+Missing Seasons: 01-03
+
+Collection Summary:
+Seasons Present: 1 / 4
+Episodes Present: 15 / 88
+---
+```
+
+For movies, it prints: Movie Name, Filename, Year, Director(s), Genre(s), Runtime, Rated, Released, Writer(s), Main Cast, Plot, Language(s), Country, Awards, IMDb Rating, Rotten Tomatoes, Metacritic, Box Office.
+
+```
+user@device: shownamer --movie --name
+Movie Name: The Secret Life of Walter Mitty
+Filename: the.secret.life.of.walter.mitty.720p.mkv
+Year: 2013
+Director(s): Ben Stiller
+Genre(s): Adventure, Comedy, Drama
+Runtime: 114 min
+Rated: PG
+Released: 25 Dec 2013
+Writer(s): Steve Conrad, James Thurber
+Main Cast: Ben Stiller, Kristen Wiig, Jon Daly
+Plot: When both he and a colleague are about to lose their job, Walter takes action by
+      embarking on an adventure more extraordinary than anything he ever
+      imagined.
+Language(s): English, Spanish, Icelandic
+Country: United States, United Kingdom
+Awards: 5 wins & 18 nominations total
+IMDb Rating: 7.3
+Rotten Tomatoes: 52%
+Metacritic: 54/100
+Box Office: $58,236,838
+---
 ```
 
 ### Custom Filename Formatting
@@ -121,6 +187,37 @@ shownamer --format "{name} ({year}) - {season}x{episode} - {title}"
 # Custom movie format
 shownamer --movie --format "{director} - {name} ({year}) [{genre}]"
 ```
+
+### Title Embedding
+
+Use the `--title` flag to write a title string directly into the file's metadata after renaming.
+
+```bash
+# Embed title metadata after renaming TV show files
+shownamer --title
+
+# Embed title metadata after renaming movie files
+shownamer --movie --title
+
+# Works alongside --format
+shownamer --title --format "{name} ({year}) - {season}x{episode} - {title}"
+
+# Preview what would be embedded without touching files
+shownamer --title --dry-run
+```
+
+The title string embedded into the metadata follows this format:
+
+| Mode   | Embedded Title Format                  | Example                        |
+| :----- | :------------------------------------- | :----------------------------- |
+| Show   | `S{season:02}xE{episode:02} - {title}` | `S02xE05 - The Dinner Party`   |
+| Movie  | `{name} ({year})`                      | `The Green Knight (2021)`      |
+
+When `--format` is used, the formatted filename string is embedded as-is instead of the defaults above.
+
+**Dependencies:**
+
+For `.mp4`, `.m4v`, and `.mov` files, title embedding uses `mutagen`, which is installed automatically with shownamer. For all other formats (`.mkv`, `.avi`, etc.), it falls back to `ffmpeg`, which must be available in your `PATH` separately.
 
 ## FAQ
 
