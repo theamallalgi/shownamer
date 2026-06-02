@@ -5,6 +5,7 @@ BASE_URL = "http://api.tvmaze.com"
 OMDB_KEY_FILE = Path.home() / ".shownamer_omdb_key"
 OMDB_URL = "http://www.omdbapi.com/"
 
+
 def get_omdb_key():
     if OMDB_KEY_FILE.exists():
         return OMDB_KEY_FILE.read_text().strip()
@@ -13,6 +14,7 @@ def get_omdb_key():
     key = input("Enter your OMDb API key: ").strip()
     OMDB_KEY_FILE.write_text(key)
     return key
+
 
 def fetch_omdb_metadata(title, year=None, api_key=None):
     params = {"t": title, "apikey": api_key, "type": "movie"}
@@ -27,6 +29,7 @@ def fetch_omdb_metadata(title, year=None, api_key=None):
         pass
     return None
 
+
 def search_media(name, media_type="shows"):
     endpoint = f"search/{media_type}"
     try:
@@ -39,14 +42,35 @@ def search_media(name, media_type="shows"):
         print(f"[!] Error searching for {name}: {e}")
     return None
 
+
 def get_episode_by_number(show_id, season, episode):
     try:
         response = requests.get(
             f"{BASE_URL}/shows/{show_id}/episodebynumber",
-            params={"season": season, "number": episode}
+            params={"season": season, "number": episode},
         )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"[!] Error getting episode S{season:02}E{episode:02}: {e}")
     return None
+
+
+def get_show_episodes(show_id):
+    try:
+        response = requests.get(f"{BASE_URL}/shows/{show_id}/episodes")
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"[!] Error getting episode list for show {show_id}: {e}")
+    return []
+
+
+def get_show_cast(show_id):
+    try:
+        response = requests.get(f"{BASE_URL}/shows/{show_id}/cast")
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"[!] Error getting cast for show {show_id}: {e}")
+    return []
