@@ -44,6 +44,7 @@ def process_file(filename, args):
             print(f"[skip] Could not parse file information from '{filename}'")
         return
 
+    rename_succeeded = False
     new_name = ""
     if args.movie:
         new_name = rename_movie(file_info, args)
@@ -56,30 +57,40 @@ def process_file(filename, args):
         new_filename = new_name + file_ext
         new_filepath = os.path.join(args.dir, new_filename)
 
-        print(f"[rename] '{filename}' → '{new_filename}'")
-
-        if not args.dry_run:
+        if filename == new_filename:
+            print(f"[skip] '{filename}' already matches the target name.")
+        elif not args.dry_run:
             if os.path.exists(new_filepath):
                 print(f"[skip] '{new_filename}' already exists.")
             else:
                 try:
+                    print(f"[rename] '{filename}' → '{new_filename}'")
                     shutil.move(file_path, new_filepath)
-                    if args.title:
-                        titleStr = _buildTitleStr(new_name, args, file_info)
-                        success = titleEmbed.embedTitle(Path(new_filepath), titleStr)
-                        if args.verbose:
-                            if success:
-                                print(f"  → [title] Embedded: {titleStr}")
-                            else:
-                                print(
-                                    f"  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
-                                )
+                    rename_succeeded = True
                 except OSError as e:
                     print(f"  → [!] Error renaming file: {e}")
         else:
-            if args.title:
-                titleStr = _buildTitleStr(new_name, args, file_info)
-                print(f"  → [title] Would embed: {titleStr}")
+            print(f"[rename] '{filename}' → '{new_filename}'")
+
+    if args.title:
+        resolved_name = new_name if new_name else os.path.splitext(filename)[0]
+
+        titleStr = _buildTitleStr(resolved_name, args, file_info)
+
+        if args.dry_run:
+            print(f"  → [title] Would embed: {titleStr}")
+        else:
+            target_path = Path(new_filepath) if rename_succeeded else Path(file_path)
+
+            success = titleEmbed.embedTitle(target_path, titleStr)
+
+            if args.verbose:
+                if success:
+                    print(f"  → [title] Embedded: {titleStr}")
+                else:
+                    print(
+                        f"  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
+                    )
     elif args.verbose:
         print(f"[skip] No new name generated for '{filename}'")
 
@@ -390,8 +401,12 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                         missing = sorted(total - owned)
                         if missing:
                             available = sorted(owned)
-                            print(f"    Available: Episodes {format_episode_ranges(available)}")
-                            print(f"    Missing: Episodes {format_episode_ranges(missing)}")
+                            print(
+                                f"    Available: Episodes {format_episode_ranges(available)}"
+                            )
+                            print(
+                                f"    Missing: Episodes {format_episode_ranges(missing)}"
+                            )
 
             # Missing Seasons
             missing_seasons = sorted(official_seasons - present_seasons)
