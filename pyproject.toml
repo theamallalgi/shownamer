@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "shownamer"
 version = "2.3.0"
 authors = [
-  { name="Amal Lalgi", email="theamallalgi+shownamer@google.com" },
+  { name="Amal Lalgi", email="theamallalgi+shownamer@gmail.com" },
 ]
 description = "A powerful yet lightweight command-line tool that automatically renames your TV show and movie files."
 readme = "README.md"
