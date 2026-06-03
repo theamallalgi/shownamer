@@ -1,4 +1,4 @@
-![Intro](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/header.png?raw=true)
+![Intro](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/header.jpg?raw=true)
 
 # Shownamer - The Ultimate Media Renamer
 
@@ -122,7 +122,7 @@ Summary: At 23 years old, Jimmy Chance is going nowhere in life. He skims pools 
          who he is now charged with raising.
 Total Seasons: 4
 Total Episodes: 88
-	
+
 Local Collection Status:
 [!] Season 04: 15 / 22 episodes
     Available: Episodes 8-22
