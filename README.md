@@ -65,6 +65,8 @@ shownamer --dir "/path/to/your/shows"
 shownamer --ext mkv mp4
 ```
 
+![Renaming TV Shows](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-series.jpg?raw=true)
+
 **Rename Movie Files**
 
 The first time you run the movie command, you will be prompted for a free OMDb API key.
@@ -78,6 +80,8 @@ shownamer --movie
 # Provide an API key directly
 shownamer --movie --api-key YOUR_API_KEY
 ```
+
+![Renaming Movies](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-movie.jpg?raw=true)
 
 **Dry Run and Verbose Mode**
 
@@ -98,6 +102,8 @@ shownamer --name
 # List all detected movies
 shownamer -m --name
 ```
+
+![List Metadata of TV Shows](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-name-series.jpg?raw=true)
 
 For TV shows, it prints: Show Name, Premiered, Ended, Status, Genres, Language, Country, Runtime, Main Cast, Rating, Summary, Total Seasons, Total Episodes, Local Collection Status (per season, with available/missing episode breakdown), Missing Seasons, and a Collection Summary.
 
@@ -135,6 +141,8 @@ Seasons Present: 1 / 4
 Episodes Present: 15 / 88
 ---
 ```
+
+![List Metadata of Movies](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-name-movie.jpg?raw=true)
 
 For movies, it prints: Movie Name, Filename, Year, Director(s), Genre(s), Runtime, Rated, Released, Writer(s), Main Cast, Plot, Language(s), Country, Awards, IMDb Rating, Rotten Tomatoes, Metacritic, Box Office.
 
@@ -188,6 +196,8 @@ shownamer --format "{name} ({year}) - {season}x{episode} - {title}"
 shownamer --movie --format "{director} - {name} ({year}) [{genre}]"
 ```
 
+![Rename Files in Custom Formats](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-format-movie.jpg?raw=true)
+
 ### Title Embedding
 
 Use the `--title` flag to write a title string directly into the file's metadata after renaming.
@@ -214,6 +224,9 @@ The title string embedded into the metadata follows this format:
 | Movie  | `{name} ({year})`                      | `The Green Knight (2021)`      |
 
 When `--format` is used, the formatted filename string is embedded as-is instead of the defaults above.
+
+![Change Title Metadata of Files](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-title-series.jpg?raw=true)
+![Change Title Metadata of Files](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-title-movie.jpg?raw=true)
 
 **Dependencies:**
 
