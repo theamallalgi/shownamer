@@ -37,12 +37,15 @@ def process_file(filename, args):
         print(f"Processing: {filename}")
 
     file_path = os.path.join(args.dir, filename)
-    file_info = utils.parse_filename(os.path.splitext(filename)[0], args.movie)
+    rawStem = os.path.splitext(filename)[0]
+    file_info = utils.parse_filename(rawStem, args.movie)
 
     if not file_info:
         if args.verbose:
             print(f"[skip] Could not parse file information from '{filename}'")
         return
+
+    file_info["raw"] = rawStem
 
     rename_succeeded = False
     new_name = ""
@@ -91,7 +94,7 @@ def process_file(filename, args):
                     print(
                         f"  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
                     )
-    elif args.verbose:
+    elif args.verbose and not new_name:
         print(f"[skip] No new name generated for '{filename}'")
 
 
@@ -206,6 +209,13 @@ def rename_movie(file_info, args):
     media_info = api.fetch_omdb_metadata(file_info["name"], file_info["year"], api_key)
 
     if not media_info:
+        fallbackTitle, fallbackYear = utils.extractTitleFallback(file_info["raw"])
+        if fallbackTitle:
+            if args.verbose:
+                print(f"  → [fallback] Retrying with extracted title: '{fallbackTitle}'")
+            media_info = api.fetch_omdb_metadata(fallbackTitle, fallbackYear, api_key)
+
+    if not media_info:
         if args.verbose:
             print(f"  → [API Error] Could not find movie '{file_info['name']}'")
         return None
@@ -235,7 +245,8 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
     for filename in os.listdir(directory):
         file_ext = os.path.splitext(filename)[1][1:]
         if file_ext.lower() in [e.lower() for e in extensions]:
-            info = utils.parse_filename(os.path.splitext(filename)[0], is_movie)
+            rawStem = os.path.splitext(filename)[0]
+            info = utils.parse_filename(rawStem, is_movie)
             if info:
                 name = info["name"]
                 if is_movie:
@@ -243,6 +254,10 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                         media_info = api.fetch_omdb_metadata(
                             info["name"], info["year"], api_key
                         )
+                        if not media_info:
+                            fallbackTitle, fallbackYear = utils.extractTitleFallback(rawStem)
+                            if fallbackTitle:
+                                media_info = api.fetch_omdb_metadata(fallbackTitle, fallbackYear, api_key)
                         if media_info:
                             media[name] = {
                                 "filename": filename,
@@ -309,7 +324,6 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                 data["plot"], width=80, subsequent_indent="      "
             )
             print(f"Plot: {wrapped_plot}")
-            # print(f"Plot: {data['plot']}")
             print(f"Language(s): {data['language']}")
             print(f"Country: {data['country']}")
             print(f"Awards: {data['awards']}")
@@ -408,7 +422,6 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                                 f"    Missing: Episodes {format_episode_ranges(missing)}"
                             )
 
-            # Missing Seasons
             missing_seasons = sorted(official_seasons - present_seasons)
             print()
             if missing_seasons:
@@ -420,7 +433,6 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
             )
             print()
 
-            # Collection Summary
             print("Collection Summary:")
             print(f"Seasons Present: {len(present_seasons)} / {len(official_seasons)}")
             print(f"Episodes Present: {present_episode_count} / {total_episode_count}")
