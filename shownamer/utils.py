@@ -38,6 +38,26 @@ def extract_title_and_year(filename):
         name = name.split(year)[0].strip()
     return name, year
 
+def extractTitleFallback(raw):
+    years = re.findall(r"(19\d{2}|20\d{2})", raw)
+    if not years:
+        return None, None
+
+    year = years[0]
+    before_year = raw.split(year)[0]
+
+    # strip leading domain/site junk: e.g. "[www.site.com] - " or "www.site.com - "
+    before_year = re.sub(r"^.*?(?:[-–]\s*|\]\s*|\)\s*)", "", before_year)
+    before_year = re.sub(r"[._\-\(\)]+", " ", before_year)
+    before_year = re.sub(r"\s+", " ", before_year).strip()
+
+    for tag in COMMON_TAGS:
+        before_year = re.sub(rf"\b{tag}\b", "", before_year, flags=re.I)
+
+    title = " ".join(word.capitalize() for word in before_year.split()).strip()
+
+    return (title if title else None), year
+
 
 def parse_filename(filename, is_movie=False):
     if is_movie:
