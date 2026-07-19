@@ -89,13 +89,12 @@ def parse_filename(filename, is_movie=False):
 
     return None
 
+ILLEGAL_CHARS = r'[\x00<>:"/\\|?*]'
 
 def clean_show_name(name, subst_char="_"):
-    illegal_chars = r'[\\/<>|*?"]'
-    return re.sub(illegal_chars, subst_char, name)
+    return re.sub(ILLEGAL_CHARS, subst_char, name)
 
 
 def validate_format(format_str):
-    illegal_chars = r'[\\/<>|*?"]'
-    if re.search(illegal_chars, format_str):
+    if re.search(ILLEGAL_CHARS, format_str):
         raise ValueError(f"Illegal character found in format string: {format_str}")
