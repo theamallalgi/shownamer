@@ -1,0 +1,5 @@
+requests
+mutagen
+tomli; python_version < '3.11'
+importlib-metadata; python_version < '3.8'
+
