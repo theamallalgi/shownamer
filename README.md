@@ -5,13 +5,13 @@
 Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze and OMDb, transforming your messy filenames into a clean, consistent, and organized format.
 
 > [!NOTE]
-> Fetches details and metadata from [TVmaze](https://www.tvmaze.com/) and [OMDb API](https://www.omdbapi.com/).
+> Fetches details and metadata from [TVmaze](https://www.tvmaze.com/), [TMDb](https://www.themoviedb.org/), and [OMDb API](https://www.omdbapi.com/).
 > No API Keys of further tweaking will be required to rename and handle TV Show files.
-> But, OMDb Will ask the user for an API Key when trying to use shownamer with movie files.
+> For movies, you'll be prompted for a free OMDb and/or TMDb key on first use — either can be skipped. If a TMDb key is configured, TMDb is used ahead of OMDb automatically, falling back to OMDb if TMDb has no match.
 
 ## The Philosophy
 
-The philosophy behind Shownamer is simplicity. It's designed to work "out of the box" with minimal configuration. While movie renaming requires a free API key from OMDb, the tool is designed to be as straightforward as possible. It does one thing and does it well: renaming your media files to make your collection look neat and tidy.
+The philosophy behind Shownamer is simplicity. It's designed to work "out of the box" with minimal configuration. While movie renaming requires a free API key from OMDb and/or TMDB, the tool is designed to be as straightforward as possible. It does one thing and does it well: renaming your media files to make your collection look neat and tidy.
 
 ## Installation
 
@@ -40,6 +40,7 @@ shownamer --help
 | `--dir`           | Specifies the directory where your media files are located. Defaults to the current working directory. |
 | `-m`, `--movie`   | Look for movie files instead of TV shows.                                                              |
 | `--api-key`       | Your OMDb API key. Overrides the stored API key. (only required for renaming movie files)              |
+| `--tmdb-api-key`  | Your TMDb API key. Overrides the stored key. If configured, TMDb is used ahead of OMDb for movies.     |
 | `--ext`           | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.              |
 | `--dry-run`       | See what changes will be made without actually renaming any files.                                     |
 | `--verbose`       | Show more details about what is happening behind the scenes.                                           |
@@ -69,16 +70,22 @@ shownamer --ext mkv mp4
 
 **Rename Movie Files**
 
-The first time you run the movie command, you will be prompted for a free OMDb API key.
-This key will be stored safety until the key is replaced by a new one.
-Get your API Key here https://www.omdbapi.com/apikey.aspx
+The first time you run the movie command, you'll be prompted for a TMDb key, then an OMDb key. Either prompt can be skipped by entering `n` or leaving it blank — you don't need both, but having both enables richer metadata (see below). Whichever keys you provide are stored on disk and won't be asked for again.
+
+Get a free TMDb key here: https://www.themoviedb.org/settings/api
+Get a free OMDb key here: https://www.omdbapi.com/apikey.aspx
+
+If a TMDb key is configured, TMDb is used first for movie lookups; OMDb is only used as a fallback if TMDb has no key or no match for a title. If you also have an OMDb key stored, TMDb results get enriched with OMDb's Awards, Rotten Tomatoes, and Metacritic ratings automatically.
 
 ```bash
 # Rename movie files in the current directory
 shownamer --movie
 
-# Provide an API key directly
-shownamer --movie --api-key YOUR_API_KEY
+# Provide an OMDb API key directly
+shownamer --movie --api-key YOUR_OMDB_API_KEY
+
+# Provide a TMDb API key directly (takes priority over OMDb once configured)
+shownamer --movie --tmdb-api-key YOUR_TMDB_API_KEY
 ```
 
 ![Renaming Movies](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-movie.jpg?raw=true)
@@ -151,25 +158,30 @@ user@device: shownamer --movie --name
 Movie Name: The Secret Life of Walter Mitty
 Filename: the.secret.life.of.walter.mitty.720p.mkv
 Year: 2013
+Tagline: Stop dreaming. Start living.
 Director(s): Ben Stiller
-Genre(s): Adventure, Comedy, Drama
+Genre(s): Adventure, Comedy, Drama, Fantasy
 Runtime: 114 min
 Rated: PG
-Released: 25 Dec 2013
-Writer(s): Steve Conrad, James Thurber
-Main Cast: Ben Stiller, Kristen Wiig, Jon Daly
-Plot: When both he and a colleague are about to lose their job, Walter takes action by
-      embarking on an adventure more extraordinary than anything he ever
-      imagined.
-Language(s): English, Spanish, Icelandic
-Country: United States, United Kingdom
+Released: 2013-12-18
+Writer(s): Steven Conrad
+Main Cast: Ben Stiller, Kristen Wiig, Sean Penn
+Plot: A timid magazine photo manager who lives life vicariously through daydreams
+      embarks on a true-life adventure when a negative goes missing.
+Language(s): en
+Country: United Kingdom, United States of America, Australia, Canada, Iceland
 Awards: 5 wins & 18 nominations total
-IMDb Rating: 7.3
+IMDb Rating: 7.227
 Rotten Tomatoes: 52%
 Metacritic: 54/100
-Box Office: $58,236,838
+Box Office: $188,133,322
+Production/Studio: Samuel Goldwyn Films, Red Hour, New Line Cinema,
+                   Big Screen Productions, Down Productions,
+                   Ingenious Media, 20th Century Fox, TSG Entertainment
 ---
 ```
+
+Fields like Tagline and Collection only appear when the resolved source (TMDb, or OMDb enrichment) actually has a value for them — any field that comes back `N/A` is omitted from the listing rather than shown as empty.
 
 ### Custom Filename Formatting
 
