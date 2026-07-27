@@ -1,11 +1,9 @@
+# titleembed.py - does embed have two e's or is it the d's? bah!
+# XXX: to tweak - perf
+
 import subprocess
 from pathlib import Path
-
-try:
-    from mutagen.mp4 import MP4
-    MUTAGEN_AVAILABLE = True
-except ImportError:
-    MUTAGEN_AVAILABLE = False
+from typing import Any
 
 
 def buildShowTitle(name: str, season: int, episode: int, title: str) -> str:
@@ -21,10 +19,16 @@ def _embedViaffmpeg(filePath: Path, titleStr: str) -> bool:
     try:
         result = subprocess.run(
             [
-                "ffmpeg", "-y", "-loglevel", "error",
-                "-i", str(filePath),
-                "-metadata", f"title={titleStr}",
-                "-codec", "copy",
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                str(filePath),
+                "-metadata",
+                f"title={titleStr}",
+                "-codec",
+                "copy",
                 str(tmpPath),
             ],
             capture_output=True,
@@ -43,10 +47,13 @@ def _embedViaffmpeg(filePath: Path, titleStr: str) -> bool:
 
 
 def _embedViaMutagen(filePath: Path, titleStr: str) -> bool:
-    if not MUTAGEN_AVAILABLE:
-        return False
     try:
-        tags = MP4(str(filePath))
+        from mutagen.mp4 import MP4
+    except ImportError:
+        return False
+
+    try:
+        tags: Any = MP4(str(filePath))
         tags["\xa9nam"] = [titleStr]
         tags.save()
         return True
@@ -57,7 +64,7 @@ def _embedViaMutagen(filePath: Path, titleStr: str) -> bool:
 def embedTitle(filePath: Path, titleStr: str) -> bool:
     ext = filePath.suffix.lower()
     if ext in (".mp4", ".m4v", ".mov"):
-        if MUTAGEN_AVAILABLE:
-            return _embedViaMutagen(filePath, titleStr)
-        return _embedViaffmpeg(filePath, titleStr)
+        return _embedViaMutagen(filePath, titleStr) or _embedViaffmpeg(
+            filePath, titleStr
+        )
     return _embedViaffmpeg(filePath, titleStr)

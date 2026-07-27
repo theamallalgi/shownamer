@@ -1,3 +1,5 @@
+# utils.py - filename parsing, cleaning etc.
+
 import re
 
 COMMON_TAGS = [
@@ -20,7 +22,7 @@ COMMON_TAGS = [
 ]
 
 
-def clean_filename_movie(filename):
+def clean_filename_movie(filename: str) -> str:
     name = re.sub(r"[._\-]+", " ", filename)
     name = re.sub(r"\s+", " ", name).strip()
     for tag in COMMON_TAGS:
@@ -30,7 +32,7 @@ def clean_filename_movie(filename):
     return name
 
 
-def extract_title_and_year(filename):
+def extract_title_and_year(filename: str) -> tuple[str, str | None]:
     name = clean_filename_movie(filename)
     years = re.findall(r"(19\d{2}|20\d{2})", name)
     year = years[0] if years else None
@@ -38,7 +40,8 @@ def extract_title_and_year(filename):
         name = name.split(year)[0].strip()
     return name, year
 
-def extractTitleFallback(raw):
+
+def extractTitleFallback(raw: str) -> tuple[str | None, str | None]:
     years = re.findall(r"(19\d{2}|20\d{2})", raw)
     if not years:
         return None, None
@@ -59,7 +62,7 @@ def extractTitleFallback(raw):
     return (title if title else None), year
 
 
-def parse_filename(filename, is_movie=False):
+def parse_filename(filename: str, is_movie: bool = False):
     if is_movie:
         title, year = extract_title_and_year(filename)
         return {"name": title, "year": year, "is_movie": True}
@@ -89,12 +92,14 @@ def parse_filename(filename, is_movie=False):
 
     return None
 
+
 ILLEGAL_CHARS = r'[\x00<>:"/\\|?*]'
 
-def clean_show_name(name, subst_char="_"):
+
+def clean_show_name(name: str, subst_char: str = "_") -> str:
     return re.sub(ILLEGAL_CHARS, subst_char, name)
 
 
-def validate_format(format_str):
+def validate_format(format_str: str) -> None:
     if re.search(ILLEGAL_CHARS, format_str):
         raise ValueError(f"Illegal character found in format string: {format_str}")

@@ -1,3 +1,6 @@
+# core.py - parse files, metadata resolving renaming, titles and such
+# XXX: to tweak - perf (see: titleembed.py)
+
 import os
 import shutil
 from pathlib import Path
@@ -5,9 +8,26 @@ from . import utils, api
 from . import titleEmbed
 import textwrap
 import re
+from typing import Any, Protocol
 
 
-def process_directory(args):
+class RenameArgs(Protocol):
+    # INFO: shape of `argparse.Namespace` for this module.
+    # INFO: used protocol instead of class because it works with `argparse.Namespace` with 0 cost @ runtime.
+    dir: str
+    ext: list[str]
+    movie: bool
+    name: str | None
+    format: str | None
+    verbose: bool
+    dry_run: bool
+    title: bool
+    char: str
+    api_key: str | None
+    tmdb_api_key: str | None
+
+
+def process_directory(args: RenameArgs) -> None:
     if args.name:
         list_detected_media(args.dir, args.ext, args.movie, args)
         return
@@ -18,14 +38,75 @@ def process_directory(args):
             process_file(filename, args)
 
 
-def get_rating(media_info, source):
+def get_rating(media_info: dict[str, Any], source: str) -> str:
     for rating in media_info.get("Ratings", []):
         if rating.get("Source") == source:
             return rating.get("Value", "N/A")
     return "N/A"
 
 
-def process_file(filename, args):
+def _print_field(label: str, value: Any) -> None:
+    if value and value != "N/A":
+        print(f"{label}: {value}")
+
+
+def resolve_movie_metadata(
+    name: str, year: str | None, raw: str, args: RenameArgs
+) -> dict[str, Any] | None:
+    # INFO: hierarchy: tmdb > omdb (both optional)
+    # INFO: if omdb key is stored (not prompted here), hybrid enrichment is applyed.
+    # tmdb_key: str | None = args.tmdb_api_key or api.get_tmdb_key()
+    tmdb_key_raw = args.tmdb_api_key or api.get_tmdb_key()
+    tmdb_key: str | None = tmdb_key_raw if isinstance(tmdb_key_raw, str) else None
+    omdb_hint_key = api.get_stored_omdb_key()
+
+    if tmdb_key:
+        media_info = api.fetch_tmdb_metadata(name, year, tmdb_key, omdb_hint_key)
+        if not media_info:
+            fallback_title, fallback_year = utils.extractTitleFallback(raw)
+            if fallback_title:
+                if args.verbose:
+                    print(
+                        f"  → [fallback] Retrying TMDb with extracted title: '{fallback_title}'"
+                    )
+                media_info = api.fetch_tmdb_metadata(
+                    fallback_title, fallback_year, tmdb_key, omdb_hint_key
+                )
+        if media_info:
+            if args.verbose:
+                print(f"  → [TMDb] Match found: '{media_info.get('Title', name)}'")
+            return media_info
+        if args.verbose:
+            print(f"  → [TMDb] No match for '{name}', falling back to OMDb")
+    elif args.verbose:
+        print("  → [TMDb] Skipped (no key configured)")
+
+    # omdb_key: str | None = args.api_key or api.get_omdb_key()
+    omdb_key_raw = args.api_key or api.get_omdb_key()
+    omdb_key: str | None = omdb_key_raw if isinstance(omdb_key_raw, str) else None
+
+    if not omdb_key:
+        if args.verbose:
+            print("  → [OMDb] Skipped (no key configured)")
+        return None
+
+    media_info = api.fetch_omdb_metadata(name, year, omdb_key)
+    if not media_info:
+        fallback_title, fallback_year = utils.extractTitleFallback(raw)
+        if fallback_title:
+            if args.verbose:
+                print(
+                    f"  → [fallback] Retrying OMDb with extracted title: '{fallback_title}'"
+                )
+            media_info = api.fetch_omdb_metadata(
+                fallback_title, fallback_year, omdb_key
+            )
+    if media_info and args.verbose:
+        print(f"  → [OMDb] Match found: '{media_info.get('Title', name)}'")
+    return media_info
+
+
+def process_file(filename: str, args: RenameArgs) -> None:
     if args.format:
         try:
             utils.validate_format(args.format)
@@ -49,6 +130,7 @@ def process_file(filename, args):
 
     rename_succeeded = False
     new_name = ""
+    new_filepath: str = file_path
     if args.movie:
         new_name = rename_movie(file_info, args)
     else:
@@ -92,13 +174,15 @@ def process_file(filename, args):
                     print(f"  → [title] Embedded: {titleStr}")
                 else:
                     print(
-                        f"  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
+                        "  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
                     )
     elif args.verbose and not new_name:
         print(f"[skip] No new name generated for '{filename}'")
 
 
-def _buildTitleStr(resolvedName: str, args, fileInfo: dict) -> str:
+def _buildTitleStr(
+    resolvedName: str, args: RenameArgs, fileInfo: dict[str, Any]
+) -> str:
     if args.format:
         return resolvedName
     if args.movie:
@@ -111,14 +195,17 @@ def _buildTitleStr(resolvedName: str, args, fileInfo: dict) -> str:
     return titleEmbed.buildShowTitle(showName, season, episode, title)
 
 
-def format_episode_ranges(episodes):
+def format_episode_ranges(episodes: list[int]) -> str:
     episodes = sorted(episodes)
 
     if not episodes:
         return ""
 
-    ranges = []
-    start = end = episodes[0]
+    # ranges = []
+    # start = end = episodes[0]
+    ranges: list[tuple[int, int]] = []
+    start: int = episodes[0]
+    end: int = episodes[0]
 
     for ep in episodes[1:]:
         if ep == end + 1:
@@ -129,25 +216,24 @@ def format_episode_ranges(episodes):
 
     ranges.append((start, end))
 
-    parts = []
-
-    for start, end in ranges:
-        if start == end:
-            parts.append(str(start))
-        else:
-            parts.append(f"{start}-{end}")
-
+    # parts = []
+    # for start, end in ranges:
+    #     if start == end:
+    #         parts.append(str(start))
+    #     else:
+    #         parts.append(f"{start}-{end}")
+    parts: list[str] = [str(s) if s == e else f"{s}-{e}" for s, e in ranges]
     return ", ".join(parts)
 
 
-def format_ranges(numbers):
+def format_ranges(numbers: list[int]) -> str:
     numbers = sorted(numbers)
-
     if not numbers:
         return "None"
 
-    ranges = []
-    start = end = numbers[0]
+    ranges: list[tuple[int, int]] = []
+    start: int = numbers[0]
+    end: int = numbers[0]
 
     for n in numbers[1:]:
         if n == end + 1:
@@ -155,21 +241,13 @@ def format_ranges(numbers):
         else:
             ranges.append((start, end))
             start = end = n
-
     ranges.append((start, end))
 
-    parts = []
-
-    for start, end in ranges:
-        if start == end:
-            parts.append(f"{start:02}")
-        else:
-            parts.append(f"{start:02}-{end:02}")
-
+    parts: list[str] = [f"{s:02}" if s == e else f"{s:02}-{e:02}" for s, e in ranges]
     return ", ".join(parts)
 
 
-def rename_show(file_info, args):
+def rename_show(file_info: dict[str, Any], args: RenameArgs) -> str | None:
     media_info = api.search_media(file_info["name"], "shows")
     if not media_info:
         if args.verbose:
@@ -204,16 +282,10 @@ def rename_show(file_info, args):
         return None
 
 
-def rename_movie(file_info, args):
-    api_key = args.api_key or api.get_omdb_key()
-    media_info = api.fetch_omdb_metadata(file_info["name"], file_info["year"], api_key)
-
-    if not media_info:
-        fallbackTitle, fallbackYear = utils.extractTitleFallback(file_info["raw"])
-        if fallbackTitle:
-            if args.verbose:
-                print(f"  → [fallback] Retrying with extracted title: '{fallbackTitle}'")
-            media_info = api.fetch_omdb_metadata(fallbackTitle, fallbackYear, api_key)
+def rename_movie(file_info: dict[str, Any], args: RenameArgs) -> str | None:
+    media_info = resolve_movie_metadata(
+        file_info["name"], file_info["year"], file_info["raw"], args
+    )
 
     if not media_info:
         if args.verbose:
@@ -234,13 +306,16 @@ def rename_movie(file_info, args):
         return None
 
 
-def list_detected_media(directory, extensions, is_movie=False, args=None):
+def list_detected_media(
+    directory: str,
+    extensions: list[str],
+    is_movie: bool = False,
+    args: RenameArgs | None = None,
+) -> None:
     if is_movie and args is None:
         raise ValueError("args is required when is_movie=True")
 
-    media = {}
-    if is_movie:
-        api_key = args.api_key or api.get_omdb_key()
+    media: dict[str, dict[str, Any]] = {}
 
     for filename in os.listdir(directory):
         file_ext = os.path.splitext(filename)[1][1:]
@@ -248,21 +323,20 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
             rawStem = os.path.splitext(filename)[0]
             info = utils.parse_filename(rawStem, is_movie)
             if info:
-                name = info["name"]
+                name = str(info["name"])
                 if is_movie:
                     if name not in media:
-                        media_info = api.fetch_omdb_metadata(
-                            info["name"], info["year"], api_key
-                        )
-                        if not media_info:
-                            fallbackTitle, fallbackYear = utils.extractTitleFallback(rawStem)
-                            if fallbackTitle:
-                                media_info = api.fetch_omdb_metadata(fallbackTitle, fallbackYear, api_key)
+                        assert args is not None
+                        year_raw = info.get("year")
+                        year = str(year_raw) if year_raw is not None else None
+                        media_info = resolve_movie_metadata(name, year, rawStem, args)
                         if media_info:
                             media[name] = {
                                 "filename": filename,
                                 "title": media_info.get("Title", "N/A"),
                                 "year": media_info.get("Year", "N/A"),
+                                "tagline": media_info.get("Tagline", "N/A"),
+                                "collection": media_info.get("Collection", "N/A"),
                                 "director": media_info.get("Director", "N/A"),
                                 "genre": media_info.get("Genre", "N/A"),
                                 "runtime": media_info.get("Runtime", "N/A"),
@@ -286,8 +360,8 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                     if name not in media:
                         show_info = api.search_media(name, "shows")
 
-                        all_episodes = []
-                        cast = []
+                        all_episodes: list[dict[str, Any]] = []
+                        cast: list[dict[str, Any]] = []
 
                         if show_info:
                             all_episodes = api.get_show_episodes(show_info["id"])
@@ -312,26 +386,28 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
         if is_movie:
             print(f"Movie Name: {data['title']}")
             print(f"Filename: {data['filename']}")
-            print(f"Year: {data['year']}")
-            print(f"Director(s): {data['director']}")
-            print(f"Genre(s): {data['genre']}")
-            print(f"Runtime: {data['runtime']}")
-            print(f"Rated: {data['rated']}")
-            print(f"Released: {data['released']}")
-            print(f"Writer(s): {data['writer']}")
-            print(f"Main Cast: {data['actors']}")
+            _print_field("Year", data["year"])
+            _print_field("Tagline", data["tagline"])
+            _print_field("Director(s)", data["director"])
+            _print_field("Genre(s)", data["genre"])
+            _print_field("Runtime", data["runtime"])
+            _print_field("Rated", data["rated"])
+            _print_field("Released", data["released"])
+            _print_field("Writer(s)", data["writer"])
+            _print_field("Main Cast", data["actors"])
             wrapped_plot = textwrap.fill(
                 data["plot"], width=80, subsequent_indent="      "
             )
             print(f"Plot: {wrapped_plot}")
-            print(f"Language(s): {data['language']}")
-            print(f"Country: {data['country']}")
-            print(f"Awards: {data['awards']}")
-            print(f"IMDb Rating: {data['imdb_rating']}")
-            print(f"Rotten Tomatoes: {data['rotten_tomatoes']}")
-            print(f"Metacritic: {data['metacritic']}")
-            print(f"Box Office: {data['box_office']}")
-            print(f"Production/Studio: {data['production']}")
+            _print_field("Language(s)", data["language"])
+            _print_field("Country", data["country"])
+            _print_field("Collection", data["collection"])
+            _print_field("Awards", data["awards"])
+            _print_field("IMDb Rating", data["imdb_rating"])
+            _print_field("Rotten Tomatoes", data["rotten_tomatoes"])
+            _print_field("Metacritic", data["metacritic"])
+            _print_field("Box Office", data["box_office"])
+            _print_field("Production/Studio", data["production"])
             print("---\n")
         else:
             show = data.get("show_info")
@@ -381,7 +457,7 @@ def list_detected_media(directory, extensions, is_movie=False, args=None):
                 )
                 print(f"Summary: {wrapped_summary}")
 
-            official = {}
+            official: dict[int, set[int]] = {}
             for ep in data["all_episodes"]:
                 season = ep["season"]
                 if season not in official:

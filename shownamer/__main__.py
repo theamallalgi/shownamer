@@ -1,23 +1,33 @@
+# __main__.py - the cli stuff
+
 import argparse
-import sys
 from . import __version__
+from typing import Any, Iterable, cast
+from .core import RenameArgs, process_directory
+# import sys
 
 
 class _Fmt(argparse.RawTextHelpFormatter):
-    def __init__(self, prog):
+    def __init__(self, prog: str) -> None:
         super().__init__(prog, max_help_position=26, width=80)
 
-    def _format_usage(self, usage, actions, groups, prefix):
+    def _format_usage(
+        self,
+        usage: str | None,
+        actions: Iterable[argparse.Action],
+        groups: Iterable[Any],
+        prefix: str | None,
+    ) -> str:
         return (
             f"shownamer {__version__}\n"
-            "Rename TV show and movie files using metadata from OMDb and TVmaze.\n"
+            "Rename TV show and movie files using metadata from TVmaze, TMDb, and OMDb.\n"
             "\n"
             "Usage:\n"
             "  shownamer [options]\n"
             "\n"
         )
 
-    def _format_action_invocation(self, action):
+    def _format_action_invocation(self, action: argparse.Action) -> str:
         if not action.option_strings:
             (metavar,) = self._metavar_formatter(action, action.dest)(1)
             return metavar
@@ -27,11 +37,13 @@ class _Fmt(argparse.RawTextHelpFormatter):
             parts[-1] += " " + args_string
         return ", ".join(parts)
 
-    def _format_actions_usage(self, actions, groups):
+    def _format_actions_usage(
+        self, actions: Iterable[argparse.Action], groups: Iterable[Any]
+    ) -> str:
         return ""
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="shownamer",
         add_help=False,
@@ -54,6 +66,15 @@ def main():
     )
     g.add_argument(
         "--api-key", metavar="<key>", help="OMDb API key. Overrides the stored key."
+    )
+    g.add_argument(
+        "--tmdb-api-key",
+        metavar="<key>",
+        help=(
+            "TMDb API key. Overrides the stored key.\n"
+            "  If configured, TMDb is used for movies instead of OMDb.\n"
+            "  Falls back to OMDb automatically if TMDb has no match."
+        ),
     )
     g.add_argument(
         "--ext",
@@ -111,10 +132,7 @@ def main():
     )
 
     args = parser.parse_args()
-
-    from .core import process_directory
-
-    process_directory(args)
+    process_directory(cast(RenameArgs, args))
 
 
 if __name__ == "__main__":
