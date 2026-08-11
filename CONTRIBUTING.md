@@ -1,4 +1,6 @@
-# Contributing to Shownamer
+<img width="1400" height="784" alt="header" src="https://github.com/user-attachments/assets/23f8ae06-1d81-4616-bfa5-e4ac4b2cd384" />
+
+# Contributing to Shownamer (*Image unrelated)
 
 Thank you for considering contributing to **Shownamer**. Bug fixes, useful enhancements, documentation improvements, and suggestions are welcome. The goal is to keep Shownamer simple, useful, and consistent with its philosophy.
 
