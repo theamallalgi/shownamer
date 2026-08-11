@@ -5,6 +5,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from mutagen import MutagenError
+
 
 def buildShowTitle(name: str, season: int, episode: int, title: str) -> str:
     return f"S{season:02}xE{episode:02} - {title}"
@@ -33,6 +35,7 @@ def _embedViaffmpeg(filePath: Path, titleStr: str) -> bool:
             ],
             capture_output=True,
             text=True,
+            check=False,
         )
         if result.returncode == 0:
             filePath.unlink()
@@ -57,7 +60,7 @@ def _embedViaMutagen(filePath: Path, titleStr: str) -> bool:
         tags["\xa9nam"] = [titleStr]
         tags.save()
         return True
-    except Exception:
+    except (OSError, ValueError, KeyError, MutagenError):
         return False
 
 
