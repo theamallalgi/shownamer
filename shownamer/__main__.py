@@ -1,9 +1,13 @@
 # __main__.py - the cli stuff
 
+from __future__ import annotations
+
 import argparse
-from . import __version__
 from typing import Any, Iterable, cast
+
+from . import __version__
 from .core import RenameArgs, process_directory
+
 # import sys
 
 
@@ -63,6 +67,11 @@ def main() -> None:
         "--movie",
         action="store_true",
         help="Target movie files instead of TV shows.",
+    )
+    g.add_argument(
+        "--anime",
+        action="store_true",
+        help="Target anime files instead of TV shows.",
     )
     g.add_argument(
         "--api-key", metavar="<key>", help="OMDb API key. Overrides the stored key."
