@@ -200,4 +200,4 @@ If you are unsure whether an idea belongs in the project, open an issue and disc
 
 > [!NOTE]
 > Keep it simple. Explain the problem, suggest a solution if you have one, and let me figure out the rest.<br />
-> And make sure to read section [C](https://github.com/theamallalgi/shownamer/edit/main/CONTRIBUTING.md#c1-code-and-project-guidelines) before any changes.
+> And make sure to read section [C](https://github.com/theamallalgi/shownamer/blob/main/CONTRIBUTING.md#c1-code-and-project-guidelines) before any changes.
