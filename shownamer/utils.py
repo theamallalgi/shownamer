@@ -232,5 +232,16 @@ def clean_show_name(name: str, subst_char: str = "_") -> str:
 
 
 def validate_format(format_str: str) -> None:
-    if re.search(ILLEGAL_CHARS, format_str):
-        raise ValueError(f"Illegal character found in format string: {format_str}")
+    field_pattern = re.compile(
+        r"\{(?P<field_name>\w+)"
+        r"(?P<format_spec>:[^{}]+)?"
+        r"(?P<conversion>![^{}]+)?\}"
+    )
+
+    for match in field_pattern.finditer(format_str):
+        format_spec = match.group("format_spec")
+
+        if format_spec and not re.fullmatch(r":0\d+", format_spec):
+            raise ValueError(
+                f"Invalid format specifier: {format_spec}"
+            )
