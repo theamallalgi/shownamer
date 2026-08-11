@@ -2,26 +2,38 @@
 
 # Shownamer - The Ultimate Media Renamer
 
-Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze and OMDb, transforming your messy filenames into a clean, consistent, and organized format.
+Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show, anime and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze, TMDB, OMDb, and anime metadata sources. transforming your messy filenames into a clean, consistent, and organized format.
 
 > [!NOTE]
-> Fetches details and metadata from [TVmaze](https://www.tvmaze.com/), [TMDb](https://www.themoviedb.org/), and [OMDb API](https://www.omdbapi.com/).
+> Fetches details and metadata from [TVmaze](https://www.tvmaze.com/), [TMDb](https://www.themoviedb.org/), [OMDb API](https://www.omdbapi.com/) and [Kitsu](https://kitsu.app/explore/anime).
 > No API Keys of further tweaking will be required to rename and handle TV Show files.
 > For movies, you'll be prompted for a free OMDb and/or TMDb key on first use — either can be skipped. If a TMDb key is configured, TMDb is used ahead of OMDb automatically, falling back to OMDb if TMDb has no match.
 
 ## The Philosophy
 
-The philosophy behind Shownamer is simplicity. It's designed to work "out of the box" with minimal configuration. While movie renaming requires a free API key from OMDb and/or TMDB, the tool is designed to be as straightforward as possible. It does one thing and does it well: renaming your media files to make your collection look neat and tidy.
+The philosophy behind Shownamer is simplicity. It's designed to work "out of the box" with minimal configuration. TV shows and anime require no API keys. Movie renaming can use a free TMDb and/or OMDb API key, with TMDb taking priority when configured and OMDb available as a fallback. It does one thing and does it well -- renaming your media files to make your collection look neat and tidy.
 
 ## Installation
 
 Installing Shownamer is as simple as running a single command. All you need is Python 3.7 or higher.
 
+#### Using **PIP**
 ```bash
 pip install shownamer
 ```
 
 That's it! You're ready to start renaming your files.
+
+##### Using **PIPX**
+```bash
+pipx install shownamer
+```
+##### Using **UV**
+```bash
+uv tool install shownamer
+```
+
+For the recommended installation, use `uv` or `pipx`. Both install in an isolated environment while making the command available globally.
 
 ## Usage
 
@@ -35,21 +47,22 @@ shownamer --help
 
 ### Arguments
 
-| Flag              | Description                                                                                            |
-| :---------------- | :----------------------------------------------------------------------------------------------------- |
-| `--dir`           | Specifies the directory where your media files are located. Defaults to the current working directory. |
-| `-m`, `--movie`   | Look for movie files instead of TV shows.                                                              |
-| `--api-key`       | Your OMDb API key. Overrides the stored API key. (only required for renaming movie files)              |
-| `--tmdb-api-key`  | Your TMDb API key. Overrides the stored key. If configured, TMDb is used ahead of OMDb for movies.     |
-| `--ext`           | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.              |
-| `--dry-run`       | See what changes will be made without actually renaming any files.                                     |
-| `--verbose`       | Show more details about what is happening behind the scenes.                                           |
-| `--name`          | List all the TV show names detected in the directory. Use with `--movie` to list movie details.        |
-| `--format`        | Define your own custom filename format.                                                                |
-| `--char`          | Replace illegal characters in filenames with a specific character (`_`, `-`, `.`).                     |
-| `--title`         | Embed media title into file metadata after renaming. Compatible with `--format` and `--movie`.         |
-| `-h`, `--help`    | Print this help message.                                                                               |
-| `-v`, `--version` | Print the current version of Shownamer and exit.                                                       |
+| Flag              | Description                                                                                                  |
+| :---------------- | :----------------------------------------------------------------------------------------------------------- |
+| `--dir`           | Specifies the directory where your media files are located. Defaults to the current working directory.       |
+| `-m`, `--movie`   | Process movie files instead of TV shows.                                                                     |
+| `--anime`         | Process anime files instead of TV shows. Use only with anime files.                                          |
+| `--api-key`       | Your OMDb API key. Overrides the stored API key for the current invocation.                                  |
+| `--tmdb-api-key`  | Your TMDb API key. Overrides the stored TMDb API key for the current invocation.                             |
+| `--ext`           | Specifies the file extensions to consider. Defaults to `mkv`, `mp4`, `avi`, `mov`, `flv`.                    |
+| `--dry-run`       | Preview changes without actually renaming or modifying files.                                                |
+| `--verbose`       | Show detailed information while processing files.                                                            |
+| `--name`          | List detected media and their metadata instead of renaming them.                                             |
+| `--format`        | Define a custom filename format using supported placeholders and optional zero-padding.                      |
+| `--char`          | Replace illegal filename characters with `_`, `-`, `.`, or another supported replacement.                    |
+| `--title`         | Embed the resulting media title into file metadata after renaming. Compatible with `--format` and `--movie`. |
+| `-h`, `--help`    | Print the help message and exit.                                                                             |
+| `-v`, `--version` | Print the current version and exit.                                                                          |
 
 ### Examples
 
@@ -90,11 +103,34 @@ shownamer --movie --tmdb-api-key YOUR_TMDB_API_KEY
 
 ![Renaming Movies](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-movie.jpg?raw=true)
 
+**Rename Anime Episodes**
+
+Use `--anime` to process anime files. Anime mode has its own filename parser and metadata lookup and should only be used with anime files.
+
+```bash
+# Rename anime files in the current directory
+shownamer --anime
+
+# Use a specific directory
+shownamer --anime --dir "/path/to/your/anime"
+
+# Restrict the files that are scanned
+shownamer --anime --ext mkv mp4
+```
+
 **Dry Run and Verbose Mode**
+
+Use `--dry-run` to preview all changes without modifying files.
 
 ```bash
 # Preview the changes without actually renaming any files
 shownamer --dry-run
+
+# Preview movie file renames
+shownamer --movie --dry-run
+
+# Preview anime renames
+shownamer --anime --dry-run
 
 # See detailed logs of what the tool is doing
 shownamer --verbose
@@ -206,7 +242,13 @@ shownamer --format "{name} ({year}) - {season}x{episode} - {title}"
 
 # Custom movie format
 shownamer --movie --format "{director} - {name} ({year}) [{genre}]"
+
+# produces e.g, "The Office - S03E0007 - Branch Closing.mkv"
+shownamer --format "{name} - S{season:02}E{episode:04} - {title}"
 ```
+
+Numeric fields support zero-padding using Python-style format specifiers: `{season:03}`, `{episode:02}`, `{season:06}` etc.
+Only supported fields and numeric zero-padding format specifiers are accepted.
 
 ![Rename Files in Custom Formats](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-format-movie.jpg?raw=true)
 
@@ -240,20 +282,19 @@ When `--format` is used, the formatted filename string is embedded as-is instead
 ![Change Title Metadata of Files](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-title-series.jpg?raw=true)
 ![Change Title Metadata of Files](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/tag-title-movie.jpg?raw=true)
 
-**Dependencies:**
-
-For `.mp4`, `.m4v`, and `.mov` files, title embedding uses `mutagen`, which is installed automatically with shownamer. For all other formats (`.mkv`, `.avi`, etc.), it falls back to `ffmpeg`, which must be available in your `PATH` separately.
-
 ## FAQ
 
-### Will this overwrite existing files?
+### 1. Are you open to fixing issues or adding new enhancements?
 
-No. The script does not overwrite files. It renames only when the target filename does not exist. You can use `--dry-run` to preview the result first.
+Absolutely! If an issue or enhancement is useful and fits the philosophy of the project, I'd be glad to consider it. Suggestions, bug reports, and feature requests are always welcome.
+If I don't respond to an issue, feel free to email me at amallalgi@protonmail.com
 
-### Does it fetch subtitles or cover images?
+### 2. Does it fetch subtitles or cover images?
 
-No. This tool only renames the video files with accurate episode titles.
+Nah! This tool only renames the video files with accurate episode titles as of now.
+Will I add this? Probably Not.
 
 ## Contributions
 
-Pull requests, suggestions, and issues are welcome! Let's make it smarter and broader (e.g., subtitle renaming, fuzzy matching, show aliases, etc.).
+For information about contributing to Shownamer, please see [CONTRIBUTIONS.md](https://github.com/theamallalgi/shownamer?tab=contributing-ov-file).
+I'm always open to suggestions and ideas that can make Shownamer simpler, more useful, and better aligned with its philosophy.
