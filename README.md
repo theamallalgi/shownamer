@@ -4,6 +4,9 @@
 
 Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show, anime and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze, TMDB, OMDb, and anime metadata sources. transforming your messy filenames into a clean, consistent, and organized format.
 
+> [!WARNING]
+> Major refactor in [progress](https://github.com/theamallalgi/shownamer/milestone/1).
+
 > [!NOTE]
 > Fetches details and metadata from [TVmaze](https://www.tvmaze.com/), [TMDb](https://www.themoviedb.org/), [OMDb API](https://www.omdbapi.com/) and [Kitsu](https://kitsu.app/explore/anime).
 > No API Keys of further tweaking will be required to rename and handle TV Show files.
