@@ -1,4 +1,4 @@
-![Intro](https://github.com/theamallalgi/shownamer/blob/main/docs/assets/header.jpg?raw=true)
+<img width="1400" height="784" alt="Shownamer" src="https://github.com/user-attachments/assets/0151371e-1177-48dd-b375-684605fcde9f" />
 
 # Shownamer - The Ultimate Media Renamer
 
