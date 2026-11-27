@@ -1,10 +1,10 @@
 <img width="1400" height="784" alt="Shownamer" src="https://github.com/user-attachments/assets/0151371e-1177-48dd-b375-684605fcde9f" />
 
-# Shownamer - The Ultimate Media Renamer
+## Shownamer - The Ultimate Media Renamer
 
-Shownamer is a powerful yet lightweight command-line tool written in Python that automatically renames your TV show, anime and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze, TMDB, OMDb, and anime metadata sources. transforming your messy filenames into a clean, consistent, and organized format.
+Shownamer is a powerful yet lightweight command-line utility written in Python that automatically renames your TV show, anime and movie files. It fetches accurate episode titles, release years, and other metadata from online sources like TVmaze, TMDB, OMDb, and anime metadata sources. transforming your messy filenames into a clean, consistent, and organized format.
 
-> [!WARNING]
+> [!IMPORTANT]
 > Major refactor in [progress](https://github.com/theamallalgi/shownamer/milestone/1).
 
 > [!NOTE]
@@ -135,7 +135,7 @@ shownamer --movie --dry-run
 # Preview anime renames
 shownamer --anime --dry-run
 
-# See detailed logs of what the tool is doing
+# See detailed logs of what the utility is doing
 shownamer --verbose
 ```
 
@@ -294,7 +294,7 @@ If I don't respond to an issue, feel free to email me at amallalgi@protonmail.co
 
 ### 2. Does it fetch subtitles or cover images?
 
-Nah! This tool only renames the video files with accurate episode titles as of now.
+Nah! This utility only renames the video files with accurate episode titles as of now.
 Will I add this? Probably Not.
 
 ## Contributions
