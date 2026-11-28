@@ -340,9 +340,6 @@ def process_file(
                         "  → [title] Failed to embed metadata (ffmpeg/mutagen required)"
                     )
 
-    elif args.verbose and not new_name:
-        print(f"[skip] No new name generated for '{filename}'")
-
 
 def _buildTitleStr(
     resolvedName: str,
